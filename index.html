@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="es" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#000000">
+  <meta name="description" content="Botsebita Laboratory TV — reproductor web experimental de listas M3U, HLS y emisiones autorizadas mediante licencia oficial.">
+  <title>Botsebita Laboratory TV · v1.10</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@1.7.4/dist/hls.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/shaka-player@5.3.4/dist/shaka-player.compiled.js"></script>
+  <script src="i18n.js" defer></script>
+  <script src="lista3-publica.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <a class="brand" href="#inicio" aria-label="Botsebita Laboratory TV, inicio">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 40 40"><path d="M8 7.8A2.8 2.8 0 0 1 12.2 5.4l21 12.1a2.8 2.8 0 0 1 0 4.9l-21 12.1A2.8 2.8 0 0 1 8 32.1Z" fill="currentColor"/></svg>
+        </span>
+        <span class="brand-copy"><strong>BOTSEBITA</strong><small>LABORATORY TV · V1.10</small></span>
+      </a>
+
+      <div class="sidebar-label" data-i18n="library">BIBLIOTECA</div>
+      <nav class="primary-nav" aria-label="Biblioteca">
+        <button class="nav-item is-active" data-view="all" type="button">
+          <span class="nav-icon">▦</span><span data-i18n="allChannels">Todos los canales</span><span class="nav-count" id="allCount">…</span>
+        </button>
+        <button class="nav-item" data-view="favorites" type="button">
+          <span class="nav-icon">♡</span><span data-i18n="favorites">Favoritos</span><span class="nav-count" id="favCount">0</span>
+        </button>
+        <button class="nav-item" data-view="recent" type="button">
+          <span class="nav-icon">◷</span><span data-i18n="recent">Vistos recientemente</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-spacer"></div>
+      <div class="sidebar-bottom">
+        <div class="connection-card">
+          <span class="connection-indicator"></span>
+          <div><strong data-i18n="webPlayer">Reproductor web</strong><small id="connectionText">Listo para probar</small></div>
+        </div>
+        <button class="sidebar-action" id="aboutButton" type="button"><span>ⓘ</span> <span data-i18n="aboutProject">Acerca del proyecto</span> <span class="arrow">↗</span></button>
+      </div>
+    </aside>
+
+    <main class="main-area" id="inicio">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="mobile-menu" id="mobileMenu" type="button" aria-label="Abrir menú" data-i18n-aria="openMenu">☰</button>
+          <div class="breadcrumb"><span data-i18n="library">Biblioteca</span><b>/</b><strong id="breadcrumbCurrent">En directo</strong></div>
+        </div>
+        <div class="topbar-actions">
+          <label class="search-box" for="searchInput">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 5 5"/></svg>
+            <input id="searchInput" type="search" placeholder="Buscar canal..." data-i18n-placeholder="searchChannel" autocomplete="off">
+            <kbd>/</kbd>
+          </label>
+          <label class="language-picker" for="languageSelect" title="Language" data-i18n-title="language"><span aria-hidden="true">◎</span><select id="languageSelect" aria-label="Idioma" data-i18n-aria="language"><option value="en">English</option><option value="zh">中文（简体）</option><option value="hi">हिन्दी</option><option value="es" selected>Español</option><option value="pt">Português</option><option value="ar">العربية</option><option value="bn">বাংলা</option><option value="ru">Русский</option><option value="ja">日本語</option><option value="pa">ਪੰਜਾਬੀ</option><option value="de">Deutsch</option><option value="fr">Français</option><option value="tr">Türkçe</option><option value="ko">한국어</option><option value="vi">Tiếng Việt</option><option value="it">Italiano</option><option value="ur">اردو</option><option value="fa">فارسی</option><option value="id">Bahasa Indonesia</option><option value="sw">Kiswahili</option></select></label>
+          <div class="source-switcher" role="group" aria-label="Seleccionar lista">
+            <button class="source-tab is-active" id="sourceList1Button" type="button" aria-pressed="true" title="Lista 1 · IPTV-org o lista propia">Lista 1</button>
+            <button class="source-tab" id="sourceList2Button" type="button" aria-pressed="false" title="Lista 2 · Catálogo MonchoApps">Lista 2 <small>MonchoApps</small></button>
+            <button class="source-tab" id="sourceList3Button" type="button" aria-pressed="false" title="Lista 3 · Canales públicos">Lista 3 <small>Públicos</small></button>
+          </div>
+          <button class="add-playlist-button" id="openPlaylistButton" type="button"><span>＋</span> <span data-i18n="addList">Añadir lista</span></button>
+          <button class="avatar" type="button" aria-label="Botsebita Laboratory TV">B</button>
+        </div>
+      </header>
+
+      <div class="content-wrap">
+        <section class="page-heading">
+          <div>
+            <div class="eyebrow"><span class="eyebrow-line"></span> <span data-i18n="mediaCenter">CENTRO MULTIMEDIA</span></div>
+            <h1 data-i18n-html="tvLive">Televisión <span>en directo.</span></h1>
+            <p data-i18n="heroSubtitle">La lista global de IPTV-org se carga automáticamente al abrir el reproductor.</p>
+          </div>
+          <div class="heading-status"><span class="status-ring"></span><span data-i18n="testEnvironment">ENTORNO DE PRUEBA</span></div>
+        </section>
+
+        <section class="workspace" aria-label="Reproductor y canales" data-i18n-aria="player">
+          <div class="player-column">
+            <div class="crt-cabinet" aria-label="Carcasa decorativa de televisor CRT">
+              <div class="crt-screen-bezel">
+                <div class="player-card">
+                  <div class="player-card-top">
+                    <div class="live-label"><span class="live-pulse"></span> <span data-i18n="player">REPRODUCTOR</span></div>
+                    <div class="player-top-actions"><span class="quality-label" data-i18n="webPlayer">WEB PLAYER</span><button class="icon-button" id="fullscreenButton" type="button" title="Pantalla completa" aria-label="Pantalla completa" data-i18n-title="fullscreen" data-i18n-aria="fullscreen">⛶</button></div>
+                  </div>
+                  <div class="video-stage" id="videoStage">
+                    <video id="videoPlayer" controls playsinline preload="none"></video>
+                    <div class="empty-player" id="emptyState">
+                      <div class="empty-orbit orbit-one"></div><div class="empty-orbit orbit-two"></div>
+                      <div class="play-emblem"><svg viewBox="0 0 40 40"><path d="M13 9.5a2 2 0 0 1 3-1.7l18 10.4a2 2 0 0 1 0 3.5L16 32.1a2 2 0 0 1-3-1.7Z" fill="currentColor"/></svg></div>
+                      <strong data-i18n="screenReady">Tu pantalla está lista</strong>
+                      <span data-i18n="screenPrompt">Seleccioná un canal o cargá tu propia lista M3U.</span>
+                      <button class="stage-add-button" id="stageAddButton" type="button" data-i18n="loadList">＋ Cargar una lista</button>
+                    </div>
+                    <div class="player-error" id="playerError" role="status" hidden></div>
+                  </div>
+                  <div class="now-playing">
+                    <div class="now-playing-main">
+                      <div class="channel-logo large-logo" id="currentLogo">TV</div>
+                      <div class="now-playing-copy"><span class="now-kicker" id="nowKicker">SIN CANAL SELECCIONADO</span><strong id="currentTitle">Elegí qué querés ver</strong><small id="currentCategory">Los canales aparecerán acá</small></div>
+                    </div>
+                    <button class="favorite-current" id="favoriteCurrent" type="button" aria-label="Agregar a favoritos" title="Agregar a favoritos" data-i18n-aria="addFavorite" data-i18n-title="addFavorite" disabled>♡</button>
+                  </div>
+                </div>
+              </div>
+              <div class="crt-lower-deck" aria-hidden="true">
+                <div class="crt-inscription">LAB DISPLAY <span>·</span> 2000 SERIES</div>
+                <div class="crt-speaker-grille"></div>
+                <div class="crt-hardware">
+                  <span class="crt-led"></span><span class="crt-power-text">POWER</span>
+                  <span class="crt-knob"></span><span class="crt-small-button"></span>
+                </div>
+              </div>
+            </div>
+
+            <div class="info-strip">
+              <div class="info-icon">⌁</div>
+              <div><strong data-i18n="browserPlayback">Reproducción desde el navegador</strong><p data-i18n="compatible">Compatible con enlaces HLS (.m3u8) y formatos de video admitidos por el navegador.</p></div>
+              <span class="info-tag">HTML5</span>
+            </div>
+          </div>
+
+          <aside class="channels-card remote-control">
+            <div class="remote-topline"><span class="remote-ir-lens"></span><span data-i18n="channelRemote">CONTROL DE CANALES</span><span class="remote-led"></span></div>
+            <div class="channels-header">
+              <div class="channels-heading-copy">
+                <div class="section-kicker" data-i18n="yourContent">TU CONTENIDO</div>
+                <h2 id="channelHeading">Canales <span id="visibleCount">…</span></h2>
+                <small class="active-source-label" id="activeSourceLabel">Lista 1 · IPTV-org</small>
+              </div>
+              <div class="channel-header-actions">
+                <button class="refresh-source-button" id="refreshSourceButton" type="button" aria-label="Actualizar lista" title="Actualizar lista">↻</button>
+                <button class="dots-button" id="channelOptionsButton" type="button" aria-label="Opciones de canales" data-i18n-aria="configure">•••</button>
+              </div>
+            </div>
+            <div class="remote-filter-panel">
+              <label class="remote-select-label"><span data-i18n="countryFilter">PAÍS</span><select id="countryFilter" aria-label="Filtrar por país" data-i18n-aria="countryFilter"></select></label>
+              <label class="remote-select-label"><span data-i18n="categoryFilter">CATEGORÍA</span><select id="categoryFilter" aria-label="Filtrar por categoría" data-i18n-aria="categoryFilter"></select></label>
+            </div>
+            <div class="channel-toolbar">
+              <div class="filter-tabs" role="group" aria-label="Filtrar canales" data-i18n-aria="channels">
+                <button class="filter-tab is-active" data-filter="all" type="button" data-i18n="allFilter">Todos</button>
+                <button class="filter-tab" data-filter="favorites" type="button" data-i18n="favFilter">♡ Favoritos</button>
+                <button class="filter-tab moncho-only" data-filter="ready" type="button" hidden><span data-i18n="monchoReadyFilter">Reproducibles</span> <span id="monchoFilterReadyCount">0</span></button>
+                <button class="filter-tab moncho-only" data-filter="protected" type="button" hidden><span data-i18n="monchoProtectedFilter">Protegidos DRM</span> <span id="monchoFilterProtectedCount">0</span></button>
+                <button class="filter-tab moncho-only" data-filter="restricted" type="button" hidden><span data-i18n="monchoRestrictedFilter">Otras restricciones</span> <span id="monchoFilterRestrictedCount">0</span></button>
+                <span class="moncho-only moncho-total" hidden><span data-i18n="allFilter">Todos</span>: <b id="monchoFilterAllCount">0</b></span>
+              </div>
+              <span class="sort-label" data-i18n="sort">A–Z ↕</span>
+            </div>
+            <div class="moncho-summary" id="monchoSummary" hidden><span class="moncho-summary-dot"></span><span id="monchoSummaryText"></span></div>
+            <div class="channel-list" id="channelList" aria-live="polite"></div>
+            <div class="empty-list" id="emptyList" hidden>
+              <span class="empty-list-icon">⌕</span><strong data-i18n="noChannels">No hay canales para mostrar</strong><p data-i18n="emptyHint">Probá otra búsqueda o agregá una lista M3U.</p>
+              <button type="button" id="emptyAddButton" data-i18n="addList">Añadir lista</button>
+            </div>
+            <div class="channels-footer"><span><i></i> <b id="footerChannelCount">…</b> <span data-i18n="availableChannels">canales disponibles</span></span><button id="clearSearchButton" type="button" data-i18n="clearSearch">Limpiar búsqueda</button></div>
+          </aside>
+        </section>
+
+        <footer class="page-footer"><span><span data-i18n="footerBrand">BOTSEBITA LABORATORY TV</span> <b>·</b> <span data-i18n="experimental">PROYECTO EXPERIMENTAL</span></span><span><span data-i18n="noInstall">Sin instalación</span> <b>·</b> <span data-i18n="noBackend">Sin backend</span> <b>·</b> <span data-i18n="remoteList">Lista remota</span></span></footer>
+      </div>
+    </main>
+  </div>
+
+  <dialog class="playlist-dialog" id="playlistDialog">
+    <form method="dialog" class="dialog-close-wrap"><button class="dialog-close" aria-label="Cerrar" data-i18n-aria="close">×</button></form>
+    <div class="dialog-heading"><div class="dialog-icon">＋</div><div><div class="section-kicker" data-i18n="configure">CONFIGURAR CONTENIDO</div><h2 data-i18n="addPlaylistTitle">Añadir una lista</h2><p data-i18n="importDesc">Importá una playlist M3U o probá con un enlace de video propio.</p></div></div>
+    <div class="import-options">
+      <label class="import-card" for="playlistFile">
+        <span class="import-card-icon">⇧</span><strong data-i18n="importFile">Importar archivo M3U</strong><small data-i18n="fileDesc">Seleccioná un archivo .m3u o .m3u8 desde tu equipo.</small>
+        <span class="import-action"><span data-i18n="chooseFile">Elegir archivo</span> <b>→</b></span>
+        <input id="playlistFile" type="file" accept=".m3u,.m3u8,audio/x-mpegurl,application/x-mpegURL" hidden>
+      </label>
+      <div class="import-card url-card">
+        <span class="import-card-icon">↗</span><strong data-i18n="importURL">Importar desde URL</strong><small data-i18n="urlDesc">La URL predeterminada de IPTV-org ya está preparada; también podés pegar otra playlist pública.</small>
+        <form id="playlistUrlForm" class="url-form">
+          <input id="playlistUrl" type="url" placeholder="https://servidor/lista.m3u" autocomplete="url" required>
+          <button type="submit" data-i18n="load">Cargar</button>
+        </form>
+      </div>
+    </div>
+    <div class="dialog-divider"><span data-i18n="orAlso">O TAMBIÉN</span></div>
+    <form id="directStreamForm" class="direct-form">
+      <label for="directStreamUrl" data-i18n="openStream">Abrir un stream individual</label>
+      <div><input id="directStreamUrl" type="url" placeholder="https://servidor/canal.m3u8" required><button type="submit" data-i18n="play">Reproducir</button></div>
+    </form>
+    <p class="dialog-note"><span>ⓘ</span> <span data-i18n="privacyNote">La lista se procesa en este navegador. No se sube a ningún servidor.</span></p>
+    <div class="dialog-feedback" id="dialogFeedback" role="status" hidden></div>
+  </dialog>
+
+  <dialog class="about-dialog alternate-dialog" id="alternateDialog" aria-labelledby="alternateDialogTitle">
+    <form method="dialog" class="dialog-close-wrap"><button class="dialog-close" aria-label="Cerrar" data-i18n-aria="close">×</button></form>
+    <div class="section-kicker" data-i18n="altSourceKicker">FUENTE SECUNDARIA</div>
+    <h2 id="alternateDialogTitle" data-i18n="otherChannelsTitle">Otros canales</h2>
+    <p data-i18n="altIntro">Fuente externa de referencia: MonchoApps, alojada en GitHub.</p>
+
+    <section class="alternate-catalog-card" aria-label="Resumen del catálogo MonchoApps">
+      <div class="alternate-card-head"><span class="alternate-repo-mark">GH</span><div><strong>MonchoApps</strong><small data-i18n="publicRepository">Repositorio público de GitHub</small></div><span class="alternate-status" data-i18n="catalogReference">REFERENCIA</span></div>
+      <div class="alternate-stats">
+        <div><strong>2</strong><span data-i18n="monchoFilesLabel">catálogos fuente</span></div>
+        <div><strong>∞</strong><span data-i18n="monchoLiveCountLabel">registros actuales al cargar</span></div>
+      </div>
+      <p class="alternate-source-caption" data-i18n="altRepoNote">La Lista 2 consulta los catálogos públicos de MonchoApps y conserva el catálogo en memoria durante la sesión.</p>
+      <div class="alternate-tags" aria-label="Categorías de ejemplo">
+        <span>Argentina</span><span>Deportes</span><span>Cine y series</span><span>Infantiles</span><span>Cultura</span><span>Noticias</span><span>Música</span>
+      </div>
+      <p class="alternate-category-note" data-i18n="altCategoryNote">Las marcas del listado indican qué registros son candidatos a reproducirse desde el navegador.</p>
+    </section>
+
+    <div class="alternate-safety-note">
+      <strong data-i18n="altCompatibilityTitle">Compatibilidad y acceso</strong>
+      <p data-i18n="altCompatibilityText">El catálogo incluye emisiones DASH/DRM, URLs con tokens, fuentes con cabeceras y otros formatos. La aplicación mantiene visibles las entradas y explica sus requisitos de acceso. También reproduce manifiestos DASH que no declaran DRM ni requieren tokens o cabeceras privadas. Para DRM se requiere consentimiento manual y una licencia oficial; no se eluden controles de acceso.</p>
+    </div>
+    <div class="alternate-actions">
+      <a class="alternate-link-button" href="https://github.com/monchotv/MonchoApps" target="_blank" rel="noopener noreferrer" data-i18n="viewRepository">Ver repositorio ↗</a>
+      <button class="alternate-import-button" id="importAuthorizedListButton" type="button" data-i18n="importAuthorizedList">Importar mi lista autorizada</button>
+    </div>
+    <p class="alternate-footnote" data-i18n="altFootnote">Podés cargar una lista M3U/M3U8 propia o un enlace de emisión que tengas autorización para reproducir.</p>
+  </dialog>
+
+  <dialog class="about-dialog drm-dialog" id="drmDialog" aria-labelledby="drmDialogTitle">
+    <form method="dialog" class="dialog-close-wrap"><button class="dialog-close" aria-label="Cerrar">×</button></form>
+    <div class="section-kicker" data-i18n="drmKicker">EMISIÓN CON PROTECCIÓN DRM</div>
+    <h2 id="drmDialogTitle" data-i18n="drmBeforePlaying">Antes de reproducir</h2>
+    <p id="drmChannelName" class="drm-channel-name">Canal protegido</p>
+    <div class="drm-warning">
+      <strong data-i18n="drmConsentTitle">Consentimiento y responsabilidad de uso</strong>
+      <p data-i18n="drmNoticeOne">Este proyecto no proporciona la señal ni concede derechos de acceso. El usuario debe contar con autorización y una licencia válida del proveedor. Este aviso no elimina el DRM ni sustituye una licencia.</p>
+      <p data-i18n="drmNoticeTwo">El desarrollador no controla las emisiones externas ni garantiza su disponibilidad. El usuario es responsable de comprobar sus derechos y cumplir las condiciones del proveedor. Este texto no pretende crear una exención legal absoluta.</p>
+    </div>
+    <form id="drmConsentForm" class="drm-form">
+      <label class="drm-field-label" for="drmSystemSelect" data-i18n="drmSystemLabel">Sistema de licencia oficial</label>
+      <select id="drmSystemSelect">
+        <option value="org.w3.clearkey" data-i18n="drmClearKeyOption">Clear Key (servidor oficial que devuelve JWK)</option>
+        <option value="com.widevine.alpha" data-i18n="drmWidevineOption">Google Widevine (servidor oficial)</option>
+      </select>
+      <label class="drm-field-label" for="drmLicenseUrl" data-i18n="drmLicenseLabel">URL HTTPS del servidor de licencias</label>
+      <input id="drmLicenseUrl" type="url" placeholder="https://proveedor.example/licencia" data-i18n-placeholder="drmLicensePlaceholder" autocomplete="off" spellcheck="false">
+      <p class="drm-help" data-i18n="drmHelp">Debe ser el endpoint oficial que te proporciona el servicio al que estás suscripto. La app no extrae ni usa los valores kid/k del catálogo, ni genera tokens o credenciales. El servidor debe permitir solicitudes desde el dominio donde publiques la web (CORS).</p>
+      <label class="drm-consent-check"><input id="drmConsent" type="checkbox"><span data-i18n="drmConsentCheck">Confirmo que tengo autorización para reproducir esta emisión y que usaré una licencia oficial del proveedor.</span></label>
+      <p id="drmAvailabilityNote" class="drm-availability-note" role="status"></p>
+      <div class="drm-actions">
+        <button type="button" class="drm-cancel" id="drmCancelButton" data-i18n="drmCancel">Cancelar</button>
+        <button type="submit" class="drm-start" id="drmStartButton" disabled data-i18n="drmContinue">Continuar y reproducir</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog class="about-dialog" id="aboutDialog">
+    <form method="dialog" class="dialog-close-wrap"><button class="dialog-close" aria-label="Cerrar" data-i18n-aria="close">×</button></form>
+    <div class="section-kicker" data-i18n="aboutProject">ACERCA DEL PROYECTO</div><h2 data-i18n="aboutTitle">Botsebita Laboratory TV</h2>
+    <p data-i18n="aboutDescription">Prototipo independiente de interfaz web inspirado en el análisis técnico de un reproductor Android. Carga por defecto la playlist pública comunitaria de IPTV-org. No es una versión oficial ni replica servicios privados.</p>
+    <div class="about-points"><div><b>01</b><span data-i18n="staticInterface">Interfaz web estática</span></div><div><b>02</b><span data-i18n="m3uImport">Importación de listas M3U</span></div><div><b>03</b><span data-i18n="hlsSupport">HLS mediante HLS.js</span></div></div>
+    <p class="about-small"><span data-i18n="sourceLabel">Lista predeterminada</span>: <a href="https://iptv-org.github.io/iptv/index.m3u" target="_blank" rel="noopener noreferrer">IPTV-org · index.m3u</a>. <span data-i18n="sourceTerms">Usá únicamente listas y enlaces de contenido que tengas derecho a reproducir. La disponibilidad depende del formato, CORS y las restricciones del proveedor del stream.</span></p>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+</body>
+</html>
